@@ -6,6 +6,8 @@ public class Player
 {
 	public Room CurrentRoom { get; private set; }
 
+	public string ReturnDirection { get; private set; } = string.Empty;
+
 	private readonly List<Item> _inventory = new();
 
 	public IReadOnlyList<Item> Inventory => _inventory.AsReadOnly();
@@ -31,6 +33,15 @@ public class Player
 			message = $"There is no exit {direction} from {CurrentRoom.Name}.";
 			return false;
 		}
+
+		ReturnDirection = direction switch
+		{
+			NORTH => SOUTH,
+			SOUTH => NORTH,
+			EAST => WEST,
+			WEST => EAST,
+			_ => string.Empty
+		};
 
 		CurrentRoom = destination;
 		message = $"You move {direction} to {CurrentRoom.Name}.";
@@ -75,5 +86,12 @@ public class Player
 
 		message = $"You drop the {item.Name}.";
 		return true;
+	}
+
+	// NUEVO: Método para buscar un ítem en el inventario (lo usa UseCommand)
+	public Item? FindItem(string itemName)
+	{
+		return _inventory.Find(item =>
+			string.Equals(item.Name, itemName, StringComparison.OrdinalIgnoreCase));
 	}
 }

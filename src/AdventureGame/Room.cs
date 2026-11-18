@@ -6,6 +6,7 @@ public class Room
 {
 	public string Name { get; }
 	public string Description { get; set; }
+	public bool IsLit { get; }
 
 	private readonly List<Item> _items = new();
 
@@ -16,10 +17,11 @@ public class Room
 	public Room? East { get; private set; }
 	public Room? West { get; private set; }
 
-	public Room(string name, string description)
+	public Room(string name, string description, bool isLit = true)
 	{
 		Name = name;
 		Description = description;
+		IsLit = isLit;
 	}
 
 	public Room? GetNeighbor(string direction)

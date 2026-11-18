@@ -18,6 +18,6 @@ public class LookCommand : ICommand
 
 	public void Execute(Player player, string target)
 	{
-		Program.ShowRoom(player.CurrentRoom);
+		Program.ShowRoom(player);
 	}
 }

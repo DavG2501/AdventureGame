@@ -14,25 +14,34 @@ public class Program
 	public const string DROP = "DROP";
 	public const string INVENTORY = "INVENTORY";
 	public const string USE = "USE";
+	public const string OPEN = "OPEN";
 
 	public static void Main()
 	{
 		Room entrance = new Room("Entrance", "A dry stone chamber with daylight spilling through the doorway.");
 		Room gallery = new Room("Gallery", "A long gallery lined with faded banners.");
-		Room archive = new Room("Archive", "An archive whose shelves hold dust-covered chronicles.", false); // OSCURO
+		Room archive = new Room("Archive", "An archive whose shelves hold dust-covered chronicles.", false);
+		Room storage = new Room("Storage", "A small storeroom with stacked wooden crates.");
 
 		entrance.Connect(EAST, gallery);
 		gallery.Connect(NORTH, archive);
+		gallery.Connect(EAST, storage);
 
 		Item oldCoin = new Item("Old Coin", "A tarnished coin stamped with a forgotten crest.");
 		Item brassToken = new Item("Brass Token", "A square brass token etched with a small tower.");
 		Item copperRing = new Item("Copper Ring", "A small ring with a dull copper finish.");
 		Lamp lamp = new Lamp("Lamp", "A sturdy oil lamp with a metal switch.");
 
+		Item ironKey = new Item("Iron Key", "A cold iron key with a square bow.");
+		Door ironDoor = new Door("Iron Door", ironKey);
+
 		gallery.PlaceItem(oldCoin);
 		gallery.PlaceItem(copperRing);
 		gallery.PlaceItem(lamp);
 		archive.PlaceItem(brassToken);
+		archive.PlaceItem(ironKey);
+
+		gallery.AttachDoor(EAST, ironDoor);
 
 		Player player = new Player(entrance);
 
@@ -43,11 +52,12 @@ public class Program
 			new TakeCommand(),
 			new DropCommand(),
 			new InventoryCommand(),
-			new UseCommand()
+			new UseCommand(),
+			new OpenCommand()
 		};
 
-		Console.WriteLine("Adventure Game — Inheritance and Lamp Lab");
-		Console.WriteLine($"Commands: {GO} <direction>, {LOOK}, {TAKE} <item name>, {DROP} <item name>, {USE} <item name>, {INVENTORY}, {QUIT}.");
+		Console.WriteLine("Adventure Game — Doors and Keys Lab");
+		Console.WriteLine($"Commands: {GO} <direction>, {LOOK}, {TAKE} <item name>, {DROP} <item name>, {USE} <item name>, {OPEN} <object name>, {INVENTORY}, {QUIT}.");
 		ShowRoom(player);
 
 		while (true)
@@ -57,7 +67,7 @@ public class Program
 
 			if (normalized.Length == 0)
 			{
-				Console.WriteLine($"Enter {GO} <direction>, {LOOK}, {TAKE} <item name>, {DROP} <item name>, {USE} <item name>, {INVENTORY}, or {QUIT}.");
+				Console.WriteLine($"Enter {GO} <direction>, {LOOK}, {TAKE} <item name>, {DROP} <item name>, {USE} <item name>, {OPEN} <object name>, {INVENTORY}, or {QUIT}.");
 				continue;
 			}
 
@@ -79,7 +89,7 @@ public class Program
 
 			if (selected is null)
 			{
-				Console.WriteLine($"Unknown command. Use {GO} <direction>, {LOOK}, {TAKE} <item name>, {DROP} <item name>, {USE} <item name>, {INVENTORY}, or {QUIT}.");
+				Console.WriteLine($"Unknown command. Use {GO} <direction>, {LOOK}, {TAKE} <item name>, {DROP} <item name>, {USE} <item name>, {OPEN} <object name>, {INVENTORY}, or {QUIT}.");
 				continue;
 			}
 
@@ -147,11 +157,23 @@ public class Program
 		if (room.Items.Count == 0)
 		{
 			Console.WriteLine("  Items: (none)");
-			return;
+		}
+		else
+		{
+			string itemList = string.Join(", ", room.Items.Select(item => item.Name));
+			Console.WriteLine($"  Items: {itemList}");
 		}
 
-		string itemList = string.Join(", ", room.Items.Select(item => item.Name));
-		Console.WriteLine($"  Items: {itemList}");
+		// NUEVO: Mostrar estado de las puertas
+		foreach (string direction in new[] { NORTH, SOUTH, EAST, WEST })
+		{
+			Door? door = room.GetDoor(direction);
+			if (door is not null)
+			{
+				string state = door.IsOpen ? "open" : door.IsLocked ? "locked" : "closed";
+				Console.WriteLine($"  {direction} door: {door.Name} ({state})");
+			}
+		}
 	}
 
 	public static void ShowInventory(Player player)
@@ -189,6 +211,13 @@ public class Program
 		if (neighbor is null)
 		{
 			Console.WriteLine($"There is no connected room {direction} of {fromRoom.Name}.");
+			return;
+		}
+
+		Door? door = fromRoom.GetDoor(direction);
+		if (door is not null && !door.IsOpen)
+		{
+			Console.WriteLine($"The {door.Name} blocks the passage {direction} from {fromRoom.Name}.");
 			return;
 		}
 

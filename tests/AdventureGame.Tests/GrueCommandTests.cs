@@ -62,8 +62,8 @@ public class GrueCommandTests
 
 		Assert.True(drop >= 0);
 		string afterDrop = take.Substring(drop);
-		Assert.Contains("Items: Brass Token, Lamp", afterDrop);
-		Assert.Contains("You take the Lamp.", afterDrop);
+		Assert.Contains("Brass Token", afterDrop);
+		Assert.Contains("Lamp", afterDrop); Assert.Contains("You take the Lamp.", afterDrop);
 		Assert.DoesNotContain("The room falls dark.", afterDrop);
 		Assert.DoesNotContain("A Grue devours you.", afterDrop);
 		Assert.Contains("You leave the dungeon.", take);

@@ -1,4 +1,5 @@
 using static Program;
+using System.Collections.Generic;
 
 namespace AdventureGame;
 
@@ -11,6 +12,9 @@ public class Room
 	private readonly List<Item> _items = new();
 
 	public IReadOnlyList<Item> Items => _items.AsReadOnly();
+
+	// NUEVO: Diccionario para asociar direcciones con puertas
+	private readonly Dictionary<string, Door> _doors = new Dictionary<string, Door>();
 
 	public Room? North { get; private set; }
 	public Room? South { get; private set; }
@@ -112,6 +116,54 @@ public class Room
 				itemName,
 				StringComparison.OrdinalIgnoreCase));
 	}
+
+	// NUEVO: Métodos para manejar puertas
+	public Door? GetDoor(string direction)
+	{
+		return _doors.TryGetValue(direction, out Door? door) ? door : null;
+	}
+
+	public Door? FindDoor(string doorName)
+	{
+		foreach (Door door in _doors.Values)
+		{
+			if (string.Equals(door.Name, doorName, StringComparison.OrdinalIgnoreCase))
+			{
+				return door;
+			}
+		}
+		return null;
+	}
+
+	public void AttachDoor(string direction, Door door)
+	{
+		ArgumentNullException.ThrowIfNull(door);
+
+		string opposite = direction switch
+		{
+			NORTH => SOUTH,
+			SOUTH => NORTH,
+			EAST => WEST,
+			WEST => EAST,
+			_ => throw new ArgumentException("Use a cardinal direction.", nameof(direction))
+		};
+
+		Room? neighbor = GetNeighbor(direction);
+
+		if (neighbor is null || !ReferenceEquals(neighbor.GetNeighbor(opposite), this))
+		{
+			throw new InvalidOperationException("Attach a door to an existing reciprocal passage.");
+		}
+
+		if (GetDoor(direction) is not null || neighbor.GetDoor(opposite) is not null)
+		{
+			throw new InvalidOperationException("This passage already has a door.");
+		}
+
+		_doors.Add(direction, door);
+		neighbor._doors.Add(opposite, door);
+	}
+	// FIN DE LOS NUEVOS MÉTODOS
 
 	private void SetNeighbor(string direction, Room neighbor)
 	{
